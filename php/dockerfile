@@ -1,0 +1,24 @@
+FROM php:8.1-apache
+
+WORKDIR /usr/local/apache2/htdocs/
+
+# Preparing Enviroment
+RUN apt-get update
+RUN apt-get -y upgrade
+RUN apt-get install -y curl zip unzip git 
+RUN apt-get install -y libcurl4-openssl-dev pkg-config libssl-dev
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+RUN apt-get install -y nodejs
+
+# Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Integrazione con Mongo
+RUN pecl install mongodb
+RUN echo "extension=mongodb.so" >> /usr/local/etc/php/conf.d/mongodb.ini
+RUN a2enmod rewrite
+RUN a2enmod headers 
+# RUN rm /etc/apache2/sites-enabled/000-default.conf
+COPY app.apache.conf /etc/apache2/sites-enabled/000-default.conf
+RUN service apache2 stop
+RUN service apache2 start
